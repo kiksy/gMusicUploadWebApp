@@ -1,16 +1,18 @@
 <?php
 session_start();
 include('../lib/GMApi/GMApi.php');
-include('../lib/MP3_Id-1.2.2/Id.php');
+//include('../lib/MP3_Id-1.2.2/Id.php');
+require('../lib/getid3/getid3.php');
 
 
 //Simple PHP form upload for songs for the unnoficial Google Music API
 
-@include_once("account.php");
-$email = (defined("GM_EMAIL") ? GM_EMAIL : "xxx");
+include_once("account.php");
+
+/*$email = (defined("GM_EMAIL") ? GM_EMAIL : "xxx");
 $password = (defined("GM_PASSWORD") ? GM_PASSWORD : "xxx");
 $mac_address = (defined("GM_MACADDRESS") ? GM_MACADDRESS : "xxx"); // xx-xx-xx-xx-xx
-
+*/
 $api = new GMApi();
 $api->setDebug(true);
 $api->enableRestore(true);
@@ -28,25 +30,53 @@ function demo_detail_upload($paths) {
 	$infos = array();
 	foreach($paths as $path) {
 	
-	$mp3 = new MP3_Id();
-	$mp3->read($path);
-	
+	$getID3 = new getID3;
+
+	// Analyze file and store returned data in $ThisFileInfo
+	$ThisFileInfo = $getID3->analyze($path);
+
+	/*
+	 Optional: copies data from all subarrays of [tags] into [comments] so
+	 metadata is all available in one location for all tag formats
+	 metainformation is always available under [tags] even if this is not called
+	*/
+	getid3_lib::CopyTagsToComments($ThisFileInfo);
+
+	/*
+	 Output desired information in whatever format you want
+	 Note: all entries in [comments] or [tags] are arrays of strings
+	 See structure.txt for information on what information is available where
+	 or check out the output of /demos/demo.browse.php for a particular file
+	 to see the full detail of what information is returned where in the array
+	 Note: all array keys may not always exist, you may want to check with isset()
+	 or empty() before deciding what to output
+	*/
+
+	//echo $ThisFileInfo['comments_html']['artist'][0]; // artist from any/all available tag formats
+	//echo $ThisFileInfo['tags']['id3v2']['title'][0];  // title from ID3v2
+	//echo $ThisFileInfo['audio']['bitrate'];           // audio bitrate
+	//echo $ThisFileInfo['playtime_string'];            // playtime in minutes:seconds, formatted string
+
+	//print_r($ThisFileInfo);die();
+
+		$trackLength = round($ThisFileInfo['playtime_seconds']) * 1000;
+		$trackLength = intval($trackLength);
 	
 		$data = array(
 			"filepath"=>$path,
 			"track"=>array(
 				//"creation"=>intval(date("U")),
 				//"lastPlayed"=>intval(date("U")),
-				"title"=>$mp3->getTag('name'),
-				"artist"=>$mp3->getTag('artists'),
-				"composer"=>$mp3->getTag('artists'),
-				"album"=>$mp3->getTag('album'),
-				"albumArtist"=>$mp3->getTag('artists'),
+				"title"=>$ThisFileInfo['comments_html']['title'][0],
+				"artist"=>$ThisFileInfo['comments_html']['artist'][0],
+				"composer"=>$ThisFileInfo['comments_html']['artist'][0],
+				"album"=>$ThisFileInfo['comments_html']['album'][0],
+				"albumArtist"=>$ThisFileInfo['comments_html']['artist'][0],
 				"year"=>2012,
 				"comment"=>"my comment",
 				"track"=>1,
 				"genre"=>"my genre",
-				"duration"=>60000, // 60 seconds, use getID3 library
+				"duration"=>$trackLength,
 				"beatsPerMinute"=>1,
 				"playCount"=>0,
 				"totalTracks"=>1,
@@ -56,7 +86,7 @@ function demo_detail_upload($paths) {
 				//"fileSize" let api do it
 				//"u13"=>0,
 				//"u14"=>0,
-				"bitrate"=>192,
+				"bitrate"=>$ThisFileInfo['audio']['bitrate'],
 				//"u15"=>"",
 				//"u16"=>0
 			)
