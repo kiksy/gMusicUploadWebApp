@@ -1,7 +1,6 @@
 <?php
 session_start();
 include('../lib/GMApi/GMApi.php');
-//include('../lib/MP3_Id-1.2.2/Id.php');
 require('../lib/getid3/getid3.php');
 
 
