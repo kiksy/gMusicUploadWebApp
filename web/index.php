@@ -103,12 +103,7 @@ if(!$api->login($email, $password, $mac_address)) {
 
 PrintOutput("login success. This login is using ".$api->getLoginResultType());
 
-/*
-$mp3_1 = new MP3_Id();
-$mp3_1->read('uploads/EmotionalBrilliance.mp3');
-print_r($mp3_1->getTag('name'));
-die('deadedHERE');
-*/
+
 ?>
 
 <form enctype="multipart/form-data" action="" method="POST">
@@ -116,7 +111,20 @@ Choose a file to upload: <input name="uploadedfile" type="file" /><br />
 <input type="submit" value="Upload File" />
 </form>
 
+HERE ARE YOUR SONGS IN PLAYLIST 1
+--------------------------------------------
+
 <?
+//Get All Playlists:
+$Allplaylists = $api->get_playlists();
+
+
+$playlist = $api->get_playlists('ecbf42b7-b2bb-4f18-9a3b-7af2c16e316f');
+print_r($playlist);
+
+
+/* Handle the upload */
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') 
 {		
 	$target_path = "uploads/";
